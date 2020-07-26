@@ -16,8 +16,8 @@
     "type": "git",
     "url": "git+https://github.com/mapbox/aws-sdk-jest.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Mapbox",
+  "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/mapbox/aws-sdk-jest/issues"
   },
