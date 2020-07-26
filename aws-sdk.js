@@ -82,7 +82,9 @@ AWS.clearAllMocks = () => {
   const services = Object.keys(clients).filter((key) => key !== 'get');
   services.forEach((service) => {
     delete clients[service];
-    AWS[service] = _AWS[service];
+    const split = service.split('.');
+    const real = traverse(_AWS).get(split);
+    traverse(AWS).set(split, real);
   });
 };
 

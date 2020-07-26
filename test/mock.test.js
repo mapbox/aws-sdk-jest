@@ -135,7 +135,7 @@ describe('stubbing', () => {
     );
   });
 
-  it('can mock nested clients like DynamoDB.DocumentClient', async () => {
+  it('can mock and clear nested clients like DynamoDB.DocumentClient', async () => {
     const get = AWS.spyOnPromise('DynamoDB.DocumentClient', 'get', {
       key: 'value',
       data: 'stuff'
@@ -143,5 +143,10 @@ describe('stubbing', () => {
     const result = await nested();
     expect(result).toStrictEqual({ key: 'value', data: 'stuff' });
     expect(get).toHaveBeenCalledWith({ Key: { key: 'value' } });
+
+    AWS.clearAllMocks();
+    const ddb = new AWS.DynamoDB.DocumentClient();
+    expect(jest.isMockFunction(ddb)).toEqual(false);
+    expect(AWS['DynamoDB.DocumentClient']).toEqual(undefined);
   });
 });
