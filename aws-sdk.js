@@ -2,6 +2,7 @@
 
 const AWS = jest.genMockFromModule('aws-sdk');
 const _AWS = jest.requireActual('aws-sdk');
+const traverse = require('traverse');
 
 Object.keys(_AWS).forEach((service) => {
   AWS[service] = _AWS[service];
@@ -10,11 +11,18 @@ Object.keys(_AWS).forEach((service) => {
 const clients = {};
 
 clients.get = (service) => {
-  if (!clients[service]) clients[service] = new _AWS[service]({});
+  const split = service.split('.');
+  const real = traverse(_AWS).get(split);
+  const mocked = traverse(AWS).get(split);
+
+  if (!clients[service]) clients[service] = new real({});
   const client = clients[service];
 
-  if (!jest.isMockFunction(AWS[service]))
-    AWS[service] = jest.fn().mockImplementation(() => client);
+  if (!jest.isMockFunction(mocked))
+    traverse(AWS).set(
+      split,
+      jest.fn().mockImplementation(() => client)
+    );
 
   return client;
 };
@@ -32,7 +40,7 @@ AWS.spyOnPromise = (service, method, response = {}) => {
     throw new Error(`${service}.${method} is already mocked`);
 
   return jest.spyOn(client, method).mockImplementation((params) => {
-    const req = new _AWS.Request(client, method, params);
+    const req = new _AWS.Request(client.service || client, method, params);
     req.promise = () =>
       new Promise((resolve, reject) =>
         process.nextTick(() => {
@@ -64,7 +72,7 @@ AWS.spyOnEachPage = (service, method, pages) => {
   };
 
   return jest.spyOn(client, method).mockImplementation((params) => {
-    const req = new _AWS.Request(client, method, params);
+    const req = new _AWS.Request(client.service || client, method, params);
     req.eachPage = jest.fn().mockImplementation(sendPage);
     return req;
   });

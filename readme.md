@@ -14,7 +14,7 @@ A generic Jest mock for the aws-sdk module.
 module.exports = require('@mapbox/aws-sdk-jest');
 ```
 
-## The stubbing methods it provides
+## The mocking methods it provides
 
 **AWS.spyOn(service, method)**
 
@@ -33,6 +33,10 @@ Again, returns a Jest mock function for an AWS SDK method call like `s3.getObjec
 Also returns a Jest mock function for an AWS SDK method call that supports pagination, like `s3.listObjectsV2()`. This time, it anticipates that your code under test will use the `.eachPage()` method.
 
 **The `pages` argument is required**, and must be an array representing the pages that the code will observe during the test. If any of the pages are an Error object, then that error will be returned to the `.eachPage()` caller after sending non-error pages.
+
+**AWS.clearAllMocks()**
+
+This clears all your mocks and should be used in `afterEach()` functions.
 
 ## Examples
 
@@ -99,12 +103,11 @@ describe('getting things', () => {
 If your code uses `.eachPage()`, there's a way to mock that, too. Say you're testing this function:
 
 ```js
-const underTest = () =>
+const paginate = () =>
   new Promise((resolve, reject) => {
     const s3 = new AWS.S3({ region: 'us-east-1' });
     let things = [];
     s3.listObjectsV2({ Bucket: 'myBucket' }).eachPage((err, data, done) => {
-      console.log(err, data);
       if (err) return reject(err);
       if (!data) return resolve(things);
       things = things.concat(data.Contents);
@@ -121,13 +124,15 @@ You can mock the method call by providing a list of pages that should be returne
 const AWS = require('aws-sdk');
 
 describe('listing things', () => {
+  afterEach(() => AWS.clearAllMocks());
+
   it('can mock .eachPage directly', async () => {
     const list = AWS.spyOnEachPage('S3', 'listObjectsV2', [
       { Contents: [1, 2, 3] },
       { Contents: [4, 5, 6] }
     ]);
 
-    const result = await underTest();
+    const result = await paginate();
     expect(result).toStrictEqual([1, 2, 3, 4, 5, 6]);
     expect(list).toHaveBeenCalledWith({ Bucket: 'myBucket' });
   });
@@ -138,7 +143,7 @@ describe('listing things', () => {
       new Error('foo')
     ]);
 
-    await expect(() => underTest()).rejects.toThrow('foo');
+    await expect(() => paginate()).rejects.toThrow('foo');
   });
 });
 ```
@@ -146,6 +151,7 @@ describe('listing things', () => {
 ## Some notes
 
 - If you try to mock a method twice, you will get an error.
+- For nested clients like `AWS.DynamoDB.DocumentClient`, you can mock methods like this: `AWS.spyOn('DynamoDB.DocumentClient', 'get')`.
 - You should be familiar with the [AWS.Request][1] object, because if your code needs to set special expectations for `.promise()`, `.eachPage()`, or `.on()`, then you're going to have to use `AWS.spyOn()` and provide your own implementations for those Request methods.
 
 [1]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Request.html

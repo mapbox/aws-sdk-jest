@@ -12,13 +12,17 @@ const eachPager = () =>
     const s3 = new AWS.S3({ region: 'ab-cdef-1' });
     let things = [];
     s3.listObjectsV2({ Bucket: 'my' }).eachPage((err, data, done) => {
-      console.log(err, data);
       if (err) return reject(err);
       if (!data) return resolve(things);
       things = things.concat(data.Contents);
       done();
     });
   });
+
+const nested = async () => {
+  const ddb = new AWS.DynamoDB.DocumentClient({ region: 'us-west-3' });
+  return await ddb.get({ Key: { key: 'value' } }).promise();
+};
 
 describe('stubbing', () => {
   afterEach(() => AWS.clearAllMocks());
@@ -115,5 +119,15 @@ describe('stubbing', () => {
     expect(() => AWS.spyOnEachPage('S3', 'listObjectsV2')).toThrow(
       'to mock .eachPage(), you must provide an array of pages'
     );
+  });
+
+  it('can mock nested clients like DynamoDB.DocumentClient', async () => {
+    const get = AWS.spyOnPromise('DynamoDB.DocumentClient', 'get', {
+      key: 'value',
+      data: 'stuff'
+    });
+    const result = await nested();
+    expect(result).toStrictEqual({ key: 'value', data: 'stuff' });
+    expect(get).toHaveBeenCalledWith({ Key: { key: 'value' } });
   });
 });
