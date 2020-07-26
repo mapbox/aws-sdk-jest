@@ -74,7 +74,7 @@ describe('getting things', () => {
     });
 
     await getThing();
-    expect(AWS.S3).toHaveBeenCalledWith({ region: 'ab-cdef-1' });
+    expect(AWS.S3).toHaveBeenCalledWith({ region: 'us-east-1' });
   });
 
   it('asks for the right thing', async () => {
@@ -103,7 +103,7 @@ describe('getting things', () => {
 If your code uses `.eachPage()`, there's a way to mock that, too. Say you're testing this function:
 
 ```js
-const paginate = () =>
+const listThings = () =>
   new Promise((resolve, reject) => {
     const s3 = new AWS.S3({ region: 'us-east-1' });
     let things = [];
@@ -132,8 +132,9 @@ describe('listing things', () => {
       { Contents: [4, 5, 6] }
     ]);
 
-    const result = await paginate();
+    const result = await listThings();
     expect(result).toStrictEqual([1, 2, 3, 4, 5, 6]);
+    expect(AWS.S3).toHaveBeenCalledWith({ region: 'us-east-1' });
     expect(list).toHaveBeenCalledWith({ Bucket: 'myBucket' });
   });
 
@@ -143,7 +144,7 @@ describe('listing things', () => {
       new Error('foo')
     ]);
 
-    await expect(() => paginate()).rejects.toThrow('foo');
+    await expect(() => listThings()).rejects.toThrow('foo');
   });
 });
 ```
