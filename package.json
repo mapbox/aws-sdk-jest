@@ -10,7 +10,7 @@
     "lint-js": "eslint . && prettier --check '**/!(package*).{js,json}'",
     "lint-md": "kramer",
     "lint": "npm run lint-js && npm run lint-md",
-    "test": "jest && npm run lint"
+    "test": "jest --coverage && npm run lint"
   },
   "repository": {
     "type": "git",
@@ -37,5 +37,58 @@
   },
   "dependencies": {
     "traverse": "^0.6.6"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@mapbox/eslint-config-mapbox",
+      "prettier"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "aws-sdk.js",
+          "test/*.test.js"
+        ],
+        "env": {
+          "jest": true
+        }
+      }
+    ]
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint",
+      "prettier --write"
+    ],
+    "!(package*).json": [
+      "prettier --write"
+    ],
+    "*.md": [
+      "kramer",
+      "kramer --format"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "none"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testRunner": "jest-circus/runner",
+    "clearMocks": true,
+    "transform": {},
+    "coverageReporters": [
+      "text",
+      "html"
+    ],
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/test/"
+    ]
   }
 }

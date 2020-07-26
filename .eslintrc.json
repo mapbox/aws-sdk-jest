@@ -1,6 +1,0 @@
-{
-  "extends": ["@mapbox/eslint-config-mapbox", "prettier"],
-  "overrides": [
-    { "files": ["aws-sdk.js", "test/*.test.js"], "env": { "jest": true } }
-  ]
-}

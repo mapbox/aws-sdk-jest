@@ -1,5 +1,0 @@
-{
-  "*.js": ["eslint", "prettier --write"],
-  "!(package*).json": ["prettier --write"],
-  "*.md": ["kramer", "kramer --format"]
-}
