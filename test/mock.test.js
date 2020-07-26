@@ -7,6 +7,19 @@ const underTest = async () => {
   return await s3.getObject({ Bucket: 'my', Key: 'thing' }).promise();
 };
 
+const eachPager = () =>
+  new Promise((resolve, reject) => {
+    const s3 = new AWS.S3({ region: 'ab-cdef-1' });
+    let things = [];
+    s3.listObjectsV2({ Bucket: 'my' }).eachPage((err, data, done) => {
+      console.log(err, data);
+      if (err) return reject(err);
+      if (!data) return resolve(things);
+      things = things.concat(data.Contents);
+      done();
+    });
+  });
+
 describe('stubbing', () => {
   afterEach(() => AWS.clearAllMocks());
 
@@ -47,5 +60,60 @@ describe('stubbing', () => {
 
   it('does not let you stub non-existent methods', () => {
     expect(() => AWS.spyOn('S3', 'FlyingSpaghettiMonster')).toThrow();
+  });
+
+  it('can mock .promise()', async () => {
+    const response = { Body: 'foo' };
+    const get = AWS.spyOnPromise('S3', 'getObject', response);
+
+    const result = await underTest();
+    expect(result).toEqual(response);
+    expect(get).toHaveBeenCalledWith({ Bucket: 'my', Key: 'thing' });
+  });
+
+  it('can mock .promise() with no return value', async () => {
+    AWS.spyOnPromise('S3', 'getObject');
+    const result = await underTest();
+    expect(result).toStrictEqual({});
+  });
+
+  it('can mock .promise() with error', async () => {
+    AWS.spyOnPromise('S3', 'getObject', new Error('foo'));
+    await expect(() => underTest()).rejects.toThrow('foo');
+  });
+
+  it('can mock .eachPage() with one page', async () => {
+    const list = AWS.spyOnEachPage('S3', 'listObjectsV2', [
+      { Contents: [1, 2, 3] }
+    ]);
+
+    const result = await eachPager();
+    expect(result).toStrictEqual([1, 2, 3]);
+    expect(list).toHaveBeenCalledWith({ Bucket: 'my' });
+  });
+
+  it('can mock .eachPage() with multiple pages', async () => {
+    AWS.spyOnEachPage('S3', 'listObjectsV2', [
+      { Contents: [1, 2, 3] },
+      { Contents: [4, 5, 6] }
+    ]);
+
+    const result = await eachPager();
+    expect(result).toStrictEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('can mock .eachPage() errors', async () => {
+    AWS.spyOnEachPage('S3', 'listObjectsV2', [
+      { Contents: [1, 2, 3] },
+      new Error('foo')
+    ]);
+
+    await expect(() => eachPager()).rejects.toThrow('foo');
+  });
+
+  it('demands you provide pages to mock .eachPage()', async () => {
+    expect(() => AWS.spyOnEachPage('S3', 'listObjectsV2')).toThrow(
+      'to mock .eachPage(), you must provide an array of pages'
+    );
   });
 });
