@@ -86,6 +86,13 @@ describe('stubbing', () => {
     await expect(() => underTest()).rejects.toThrow('foo');
   });
 
+  it('cannot double-mock .promise()', async () => {
+    AWS.spyOnPromise('S3', 'getObject');
+    expect(() => AWS.spyOnPromise('S3', 'getObject')).toThrow(
+      'S3.getObject is already mocked'
+    );
+  });
+
   it('can mock .eachPage() with one page', async () => {
     const list = AWS.spyOnEachPage('S3', 'listObjectsV2', [
       { Contents: [1, 2, 3] }
@@ -118,6 +125,13 @@ describe('stubbing', () => {
   it('demands you provide pages to mock .eachPage()', async () => {
     expect(() => AWS.spyOnEachPage('S3', 'listObjectsV2')).toThrow(
       'to mock .eachPage(), you must provide an array of pages'
+    );
+  });
+
+  it('cannot double-mock .eachPage()', async () => {
+    AWS.spyOnEachPage('S3', 'listObjectsV2', []);
+    expect(() => AWS.spyOnEachPage('S3', 'listObjectsV2', [])).toThrow(
+      'S3.listObjectsV2 is already mocked'
     );
   });
 
