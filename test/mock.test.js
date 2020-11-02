@@ -148,5 +148,13 @@ describe('stubbing', () => {
     const ddb = new AWS.DynamoDB.DocumentClient();
     expect(jest.isMockFunction(ddb)).toEqual(false);
     expect(AWS['DynamoDB.DocumentClient']).toEqual(undefined);
+
+    const get2 = AWS.spyOnPromise('DynamoDB.DocumentClient', 'get', {
+      key: 'value',
+      data: 'get2'
+    });
+    const result2 = await nested();
+    expect(result2).toStrictEqual({ key: 'value', data: 'get2' });
+    expect(get2).toHaveBeenCalledWith({ Key: { key: 'value' } });
   });
 });
