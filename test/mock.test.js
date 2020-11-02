@@ -47,6 +47,10 @@ describe('stubbing', () => {
     const after = new AWS.S3();
     expect(jest.isMockFunction(after.putObject)).toEqual(false);
     expect(jest.isMockFunction(after.getObject)).toEqual(false);
+
+    AWS.spyOn('S3', 'putObject');
+    const s3Again = new AWS.S3();
+    expect(jest.isMockFunction(s3Again.putObject)).toEqual(true);
   });
 
   it('does not let you stub a method twice', () => {
