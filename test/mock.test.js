@@ -146,7 +146,7 @@ describe('stubbing', () => {
 
     AWS.clearAllMocks();
     const ddb = new AWS.DynamoDB.DocumentClient();
-    expect(jest.isMockFunction(ddb)).toEqual(false);
+    expect(jest.isMockFunction(ddb.get)).toEqual(false);
     expect(AWS['DynamoDB.DocumentClient']).toEqual(undefined);
   });
 });
