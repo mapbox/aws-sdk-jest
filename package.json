@@ -1,6 +1,6 @@
 {
   "name": "@mapbox/aws-sdk-jest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "aws-sdk.js",
   "scripts": {
