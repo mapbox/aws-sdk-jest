@@ -5,7 +5,10 @@ const _AWS = jest.requireActual('aws-sdk');
 const traverse = require('traverse');
 
 Object.keys(_AWS).forEach((service) => {
-  AWS[service] = _AWS[service];
+  AWS[service] = {};
+  Object.keys(_AWS[service]).forEach((key) => {
+    AWS[service][key] = _AWS[service][key];
+  });
 });
 
 const clients = {};
