@@ -144,6 +144,10 @@ describe('stubbing', () => {
     expect(result).toStrictEqual({ key: 'value', data: 'stuff' });
     expect(get).toHaveBeenCalledWith({ Key: { key: 'value' } });
 
+    expect(() => {
+      new AWS.DynamoDB();
+    }).not.toThrow();
+
     AWS.clearAllMocks();
     const ddb = new AWS.DynamoDB.DocumentClient();
     expect(jest.isMockFunction(ddb.get)).toEqual(false);
