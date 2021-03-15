@@ -154,5 +154,12 @@ describe('listing things', () => {
 - If you try to mock a method twice, you will get an error.
 - For nested clients like `AWS.DynamoDB.DocumentClient`, you can mock methods like this: `AWS.spyOn('DynamoDB.DocumentClient', 'get')`.
 - You should be familiar with the [AWS.Request][1] object, because if your code needs to set special expectations for `.promise()`, `.eachPage()`, or `.on()`, then you're going to have to use `AWS.spyOn()` and provide your own implementations for those Request methods.
+- If your application is using [`dyno`][2] ... don't! Use `AWS.DynamoDB.DocumentClient`, instead! But if you must, you'll need to mock the nested paths of the `aws-sdk` that `dyno` uses:
+  ```js
+  jest.mock('aws-sdk/lib/dynamodb/set', () => jest.fn());
+  jest.mock('aws-sdk/lib/dynamodb/converter', () => jest.fn());
+  ```
 
 [1]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Request.html
+
+[2]: https://github.com/mapbox/dyno
