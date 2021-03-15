@@ -19,9 +19,7 @@ for (const key of Object.keys(_AWS)) {
       return realValue.apply(this, arguments);
     };
     AWS[key].prototype = realValue.prototype;
-    for (const funcKey of Object.keys(realValue)) {
-      AWS[key] = realValue[funcKey];
-    }
+    Object.assign(AWS[key], realValue);
   } else {
     AWS[key] = realValue;
   }
@@ -37,11 +35,11 @@ clients.get = (service) => {
   if (!clients[service]) clients[service] = new real({});
   const client = clients[service];
 
-  if (!jest.isMockFunction(mocked))
-    traverse(AWS).set(
-      split,
-      jest.fn().mockImplementation(() => client)
-    );
+  if (!jest.isMockFunction(mocked)) {
+    const mock = jest.fn().mockImplementation(() => client);
+    Object.assign(mock, real);
+    traverse(AWS).set(split, mock);
+  }
 
   return client;
 };

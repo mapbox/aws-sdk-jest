@@ -1,6 +1,7 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const RealAWS = jest.requireActual('aws-sdk');
 
 const underTest = async () => {
   const s3 = new AWS.S3({ region: 'ab-cdef-1' });
@@ -154,13 +155,19 @@ describe('stubbing', () => {
     expect(AWS['DynamoDB.DocumentClient']).toEqual(undefined);
   });
 
-  it('can mock both top-level and nested clients', async () => {
+  it('can mock both top-level and nested clients without breaking client props', async () => {
+    expect(AWS.DynamoDB.DocumentClient).toBe(RealAWS.DynamoDB.DocumentClient);
+    expect(AWS.DynamoDB.Converter).toBe(RealAWS.DynamoDB.Converter);
+
     const getItem = AWS.spyOnPromise('DynamoDB', 'getItem', {
       Item: { key: 'getItem' }
     });
     const get = AWS.spyOnPromise('DynamoDB.DocumentClient', 'get', {
       Item: { key: 'get' }
     });
+
+    expect(jest.isMockFunction(AWS.DynamoDB.DocumentClient)).toEqual(true);
+    expect(AWS.DynamoDB.Converter).toBe(RealAWS.DynamoDB.Converter);
 
     const ddb = new AWS.DynamoDB({ region: 'us-west-3' });
     const ddbResult = await ddb.getItem({ Key: { key: 'getItem' } }).promise();
