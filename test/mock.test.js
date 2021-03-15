@@ -166,6 +166,7 @@ describe('stubbing', () => {
       Item: { key: 'get' }
     });
 
+    expect(jest.isMockFunction(AWS.DynamoDB)).toEqual(true);
     expect(jest.isMockFunction(AWS.DynamoDB.DocumentClient)).toEqual(true);
     expect(AWS.DynamoDB.Converter).toBe(RealAWS.DynamoDB.Converter);
 
