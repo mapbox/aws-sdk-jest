@@ -45,7 +45,7 @@ describe('stubbing', () => {
 
     AWS.clearAllMocks();
     const after = new AWS.S3();
-    expect(jest.isMockFunction('after.putObject')).toEqual(false);
+    expect(jest.isMockFunction(after.putObject)).toEqual(false);
     expect(jest.isMockFunction(after.getObject)).toEqual(false);
   });
 
