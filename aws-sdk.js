@@ -4,12 +4,28 @@ const AWS = jest.genMockFromModule('aws-sdk');
 const _AWS = jest.requireActual('aws-sdk');
 const traverse = require('traverse');
 
-Object.keys(_AWS).forEach((service) => {
-  AWS[service] = {};
-  Object.keys(_AWS[service]).forEach((key) => {
-    AWS[service][key] = _AWS[service][key];
-  });
-});
+// Copy properties of the real `_AWS` object onto the mock `AWS` object. Service
+// classes are cloned as a new function with the real service as its prototype.
+// Everything else is copied with `=` (by value for primitives, by reference for
+// objects). Also, properties of service classes are copied with `=`, to ensure
+// we get nested clients like `DynamoDB.DocumentClient`.
+for (const key of Object.keys(_AWS)) {
+  const realValue = _AWS[key];
+  if (
+    typeof realValue === 'function' &&
+    realValue.prototype instanceof _AWS.Service
+  ) {
+    AWS[key] = function () {
+      return realValue.apply(this, arguments);
+    };
+    AWS[key].prototype = realValue.prototype;
+    for (const funcKey of Object.keys(realValue)) {
+      AWS[key] = realValue[funcKey];
+    }
+  } else {
+    AWS[key] = realValue;
+  }
+}
 
 const clients = {};
 

@@ -144,9 +144,38 @@ describe('stubbing', () => {
     expect(result).toStrictEqual({ key: 'value', data: 'stuff' });
     expect(get).toHaveBeenCalledWith({ Key: { key: 'value' } });
 
+    expect(() => {
+      new AWS.DynamoDB();
+    }).not.toThrow();
+
     AWS.clearAllMocks();
     const ddb = new AWS.DynamoDB.DocumentClient();
     expect(jest.isMockFunction(ddb.get)).toEqual(false);
     expect(AWS['DynamoDB.DocumentClient']).toEqual(undefined);
+  });
+
+  it('can mock both top-level and nested clients', async () => {
+    const getItem = AWS.spyOnPromise('DynamoDB', 'getItem', {
+      Item: { key: 'getItem' }
+    });
+    const get = AWS.spyOnPromise('DynamoDB.DocumentClient', 'get', {
+      Item: { key: 'get' }
+    });
+
+    const ddb = new AWS.DynamoDB({ region: 'us-west-3' });
+    const ddbResult = await ddb.getItem({ Key: { key: 'getItem' } }).promise();
+    expect(ddbResult).toEqual({ Item: { key: 'getItem' } });
+    expect(getItem).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledTimes(0);
+    expect(getItem).toHaveBeenCalledWith({ Key: { key: 'getItem' } });
+
+    const docClient = new AWS.DynamoDB.DocumentClient({ region: 'us-west-3' });
+    const docClientResult = await docClient
+      .get({ Key: { key: 'get' } })
+      .promise();
+    expect(docClientResult).toEqual({ Item: { key: 'get' } });
+    expect(getItem).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledWith({ Key: { key: 'get' } });
   });
 });
